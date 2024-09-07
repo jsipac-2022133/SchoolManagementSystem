@@ -5,9 +5,6 @@ public class Curso {
     private int numeroCreditos;
     private String version;
 
-    public Curso() {
-    }
-
     public Curso(int id, String nombre, String descripcion, int numeroCreditos, String version) {
         this.id = id;
         this.nombre = nombre;

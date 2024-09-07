@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class GestorAcademico {
+public class GestorAcademico implements ServiciosAcademicosI {
     private ArrayList<Estudiante> estudiantes;
     private ArrayList<Curso> cursos;
     private HashMap<Curso, ArrayList<Estudiante>> inscripciones;
@@ -12,30 +12,72 @@ public class GestorAcademico {
         this.inscripciones = new HashMap<>();
     }
 
-    public void agregarEstudiante(Estudiante estudiante) {
-        estudiantes.add(estudiante);
-    }
-
-    public void agregarCurso(Curso curso) {
-        cursos.add(curso);
-    }
-
-    public void inscribirEstudianteEnCurso(Estudiante estudiante, Curso curso) {
-        if (!inscripciones.containsKey(curso)) {
-            inscripciones.put(curso, new ArrayList<>());
+    @Override
+    public void matricularEstudiante(Estudiante estudiante) {
+        if (!estudiantes.contains(estudiante)) {
+            estudiantes.add(estudiante);
+            System.out.println("Estudiante matriculado.");
         }
-        inscripciones.get(curso).add(estudiante);
     }
 
-    public ArrayList<Estudiante> getEstudiantes() {
-        return estudiantes;
+    @Override
+    public void agregarCurso(Curso curso) {
+        if (!cursos.contains(curso)) {
+            cursos.add(curso);
+            System.out.println("Curso agregado.");
+        }
     }
 
-    public ArrayList<Curso> getCursos() {
-        return cursos;
+    @Override
+    public void inscribirEstudianteCurso(Estudiante estudiante, int idCurso) throws EstudianteYaInscritoException {
+        Curso curso = cursos.stream().filter(c -> c.getId() == idCurso).findFirst().orElse(null);
+        if (curso != null) {
+            ArrayList<Estudiante> inscritos = inscripciones.getOrDefault(curso, new ArrayList<>());
+            if (inscritos.contains(estudiante)) {
+                throw new EstudianteYaInscritoException("El estudiante ya está inscrito.");
+            } else {
+                inscritos.add(estudiante);
+                inscripciones.put(curso, inscritos);
+                System.out.println("Estudiante inscrito en el curso.");
+            }
+        }
     }
 
-    public HashMap<Curso, ArrayList<Estudiante>> getInscripciones() {
-        return inscripciones;
+    @Override
+    public void desinscribirEstudianteCurso(int idEstudiante, int idCurso) throws EstudianteNoInscritoEnCursoException {
+        // Buscar el curso por su ID
+        Curso curso = null;
+        for (Curso c : cursos) {
+            if (c.getId() == idCurso) {
+                curso = c;
+                break;
+            }
+        }
+
+        if (curso == null) {
+            throw new EstudianteNoInscritoEnCursoException("Curso con ID " + idCurso + " no encontrado.");
+        }
+
+        ArrayList<Estudiante> estudiantesInscritos = inscripciones.get(curso);
+
+        if (estudiantesInscritos == null || estudiantesInscritos.isEmpty()) {
+            throw new EstudianteNoInscritoEnCursoException("No hay estudiantes inscritos en el curso.");
+        }
+
+        Estudiante estudianteAEliminar = null;
+        for (Estudiante e : estudiantesInscritos) {
+            if (e.getId() == idEstudiante) {
+                estudianteAEliminar = e;
+                break;
+            }
+        }
+
+        if (estudianteAEliminar == null) {
+            throw new EstudianteNoInscritoEnCursoException("El estudiante con ID " + idEstudiante + " no está inscrito en el curso.");
+        }
+
+        estudiantesInscritos.remove(estudianteAEliminar);
+        System.out.println("Estudiante desinscrito del curso exitosamente.");
     }
+
 }
